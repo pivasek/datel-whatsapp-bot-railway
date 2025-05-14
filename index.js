@@ -8,6 +8,7 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+// Inicializace WhatsApp klienta
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
@@ -16,34 +17,48 @@ const client = new Client({
   }
 });
 
+// QR kód pro přihlášení (na vývojovém prostředí)
 client.on('qr', qr => {
-  console.log('QR kód pro WhatsApp:');
+  console.log('📱 QR kód pro WhatsApp:');
   qrcode.generate(qr, { small: true });
 });
 
+// Po připojení klienta
 client.on('ready', () => {
   console.log('✅ WhatsApp klient připraven!');
 });
 
+// Spuštění klienta
 client.initialize();
 
+// POST endpoint pro odesílání zpráv do skupiny
 app.post('/send', async (req, res) => {
   const { groupName, message } = req.body;
-  if (!groupName || !message) return res.status(400).send("Chybí groupName nebo message");
+
+  // Kontrola požadovaných parametrů
+  if (!groupName || !message) {
+    return res.status(400).json({ error: "❗ Chybí groupName nebo message" });
+  }
 
   try {
     const chats = await client.getChats();
     const group = chats.find(chat => chat.isGroup && chat.name === groupName);
-    if (!group) return res.status(404).send("Skupina nenalezena");
+
+    if (!group) {
+      return res.status(404).json({ error: `❌ Skupina '${groupName}' nenalezena` });
+    }
 
     await client.sendMessage(group.id._serialized, message);
-    res.send("Zpráva odeslána");
+    console.log(`📤 Zpráva odeslána do skupiny '${groupName}': ${message}`);
+    res.json({ status: "✅ Zpráva odeslána" });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Chyba při odesílání");
+    console.error('❌ Chyba při odesílání zprávy:', err);
+    res.status(500).json({ error: "Chyba při odesílání zprávy" });
   }
 });
 
+// Spuštění serveru
 app.listen(port, () => {
   console.log(`🟢 Server běží na portu ${port}`);
 });
