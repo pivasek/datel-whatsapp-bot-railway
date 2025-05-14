@@ -1,17 +1,11 @@
-FROM puppeteer/puppeteer:latest
+FROM browserless/chrome:latest
 
-# Nastavení pracovní složky
+# Volitelně přidej své soubory, např.:
+COPY . /app
 WORKDIR /app
 
-# Kopírování package.json a instalace závislostí
-COPY package*.json ./
+# Nainstaluj závislosti
 RUN npm install
 
-# Kopírování zbytku kódu
-COPY . .
-
-# Expozice portu
-EXPOSE 8080
-
-# Startování aplikace
+# Spusť aplikaci
 CMD ["npm", "start"]
