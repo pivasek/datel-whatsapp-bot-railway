@@ -18,9 +18,15 @@ const client = new Client({
 });
 
 // QR kód pro přihlášení (na vývojovém prostředí)
+const fs = require('fs');
+const qrcode = require('qrcode');
+
 client.on('qr', qr => {
-  console.log('📱 QR kód pro WhatsApp:');
-  qrcode.generate(qr, { small: true });
+  console.log('QR kód vygenerován, ukládám do qr.png...');
+  qrcode.toFile('qr.png', qr, (err) => {
+    if (err) throw err;
+    console.log('QR kód uložen jako qr.png');
+  });
 });
 
 // Po připojení klienta
