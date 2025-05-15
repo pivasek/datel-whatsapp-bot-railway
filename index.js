@@ -7,6 +7,10 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.get('/', (req, res) => {
+  res.send('WhatsApp bot je aktivní');
+});
+
 app.use(bodyParser.json());
 
 const client = new Client({
