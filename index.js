@@ -1,5 +1,6 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode'); // ❗ použijeme pouze tento
+const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -8,7 +9,6 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
-// Inicializace WhatsApp klienta
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
@@ -17,31 +17,28 @@ const client = new Client({
   }
 });
 
-// QR kód pro přihlášení (na vývojovém prostředí)
-const fs = require('fs');
-const qrcode = require('qrcode');
-
+// Generování QR kódu a uložení do souboru
 client.on('qr', qr => {
-  console.log('QR kód vygenerován, ukládám do qr.png...');
+  console.log('🔐 QR kód vygenerován, ukládám jako qr.png...');
   qrcode.toFile('qr.png', qr, (err) => {
-    if (err) throw err;
-    console.log('QR kód uložen jako qr.png');
+    if (err) {
+      console.error('❌ Chyba při ukládání QR kódu:', err);
+    } else {
+      console.log('✅ QR kód uložen jako qr.png');
+    }
   });
 });
 
-// Po připojení klienta
 client.on('ready', () => {
   console.log('✅ WhatsApp klient připraven!');
 });
 
-// Spuštění klienta
 client.initialize();
 
-// POST endpoint pro odesílání zpráv do skupiny
+// Endpoint pro odesílání zpráv do skupin
 app.post('/send', async (req, res) => {
   const { groupName, message } = req.body;
 
-  // Kontrola požadovaných parametrů
   if (!groupName || !message) {
     return res.status(400).json({ error: "❗ Chybí groupName nebo message" });
   }
@@ -64,7 +61,6 @@ app.post('/send', async (req, res) => {
   }
 });
 
-// Spuštění serveru
 app.listen(port, () => {
   console.log(`🟢 Server běží na portu ${port}`);
 });
